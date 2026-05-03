@@ -57,7 +57,10 @@ namespace AirLine_Reservation_System.Forms
 
         private void LoadData()
         {
-            try { dgv.DataSource = dbHelper.ExecuteQuery("SELECT * FROM Airline"); }
+            try { 
+                dgv.DataSource = dbHelper.ExecuteQuery("SELECT * FROM Airline"); 
+                if (dgv.Columns.Contains("AirlineID")) dgv.Columns["AirlineID"].Visible = false;
+            }
             catch (Exception ex) { MessageBox.Show("Load error: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
         }
 

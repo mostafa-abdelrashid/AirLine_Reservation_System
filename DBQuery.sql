@@ -60,19 +60,20 @@ Code      NVARCHAR(10)  NOT NULL UNIQUE
 );
 
 CREATE TABLE Flight (
-FlightID             INT IDENTITY(1,1) PRIMARY KEY,
-Flight_Number        VARCHAR(20) NOT NULL UNIQUE,
-Departure_Time       DATETIME    NOT NULL,
-Arrival_Time         DATETIME    NOT NULL,
-Status               VARCHAR(50) NOT NULL DEFAULT 'Scheduled',
-AircraftID           INT NOT NULL,
-AirlineID            INT NOT NULL,
+FlightID INT IDENTITY(1,1) PRIMARY KEY,
+Flight_Number VARCHAR(20) NOT NULL UNIQUE,
+Departure_Time DATETIME NOT NULL,
+Arrival_Time DATETIME NOT NULL,
+Status VARCHAR(50) NOT NULL DEFAULT 'Scheduled',
+AircraftID INT NOT NULL,
+AirlineID INT NOT NULL,
 Departure_Airport_ID INT NOT NULL,
-Arrival_Airport_ID   INT NOT NULL,
+Arrival_Airport_ID INT NOT NULL,
+
 FOREIGN KEY (AircraftID) REFERENCES Aircraft(AircraftID) ON DELETE CASCADE,
-FOREIGN KEY (AirlineID) REFERENCES Airline(AirlineID) ON DELETE CASCADE,
+FOREIGN KEY (AirlineID) REFERENCES Airline(AirlineID),
 FOREIGN KEY (Departure_Airport_ID) REFERENCES Airport(AirportID) ON DELETE CASCADE,
-FOREIGN KEY (Arrival_Airport_ID)   REFERENCES Airport(AirportID) ON DELETE CASCADE
+FOREIGN KEY (Arrival_Airport_ID)   REFERENCES Airport(AirportID) 
 );
 
 CREATE TABLE BookingFlight (
@@ -95,7 +96,7 @@ FlightID    INT NOT NULL,
 PassengerID INT NOT NULL,
 FOREIGN KEY (BookingID)   REFERENCES Booking(BookingID) ON DELETE CASCADE,
 FOREIGN KEY (FlightID)    REFERENCES Flight(FlightID) ON DELETE CASCADE,
-FOREIGN KEY (PassengerID) REFERENCES Passenger(PassengerID) ON DELETE CASCADE
+FOREIGN KEY (PassengerID) REFERENCES Passenger(PassengerID)
 );
 
 -- =====================

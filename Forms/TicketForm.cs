@@ -9,7 +9,8 @@ namespace AirLine_Reservation_System.Forms
     {
         private DBHelper dbHelper = new DBHelper();
         private DataGridView dgv;
-        private TextBox txtId, txtBookingId, txtFlightId, txtPassengerId, txtSeatNumber, txtPrice;
+        private TextBox txtId, txtSeatNumber, txtPrice;
+        private ComboBox cmbBooking, cmbFlight, cmbPassenger;
         private ComboBox cmbClass;
 
         public TicketForm()
@@ -31,14 +32,14 @@ namespace AirLine_Reservation_System.Forms
             this.Controls.Add(txtId);
 
             y += 38;
-            this.Controls.Add(FormTheme.MakeLabel("Booking ID:", lx, y));
-            txtBookingId = FormTheme.MakeTextBox(fx, y, 100); this.Controls.Add(txtBookingId);
-            this.Controls.Add(FormTheme.MakeLabel("Flight ID:", lx2, y));
-            txtFlightId = FormTheme.MakeTextBox(fx2, y, 100); this.Controls.Add(txtFlightId);
+            this.Controls.Add(FormTheme.MakeLabel("Booking:", lx, y));
+            cmbBooking = FormTheme.MakeComboBox(fx, y, 160); this.Controls.Add(cmbBooking);
+            this.Controls.Add(FormTheme.MakeLabel("Flight:", lx2, y));
+            cmbFlight = FormTheme.MakeComboBox(fx2, y, 160); this.Controls.Add(cmbFlight);
 
             y += 38;
-            this.Controls.Add(FormTheme.MakeLabel("Passenger ID:", lx, y));
-            txtPassengerId = FormTheme.MakeTextBox(fx, y, 100); this.Controls.Add(txtPassengerId);
+            this.Controls.Add(FormTheme.MakeLabel("Passenger:", lx, y));
+            cmbPassenger = FormTheme.MakeComboBox(fx, y, 160); this.Controls.Add(cmbPassenger);
             this.Controls.Add(FormTheme.MakeLabel("Seat Number:", lx2, y));
             txtSeatNumber = FormTheme.MakeTextBox(fx2, y, 100); this.Controls.Add(txtSeatNumber);
 
@@ -75,6 +76,19 @@ namespace AirLine_Reservation_System.Forms
                     "FROM Ticket t " +
                     "JOIN Passenger p ON t.PassengerID = p.PassengerID " +
                     "JOIN Flight f    ON t.FlightID    = f.FlightID");
+                if (dgv.Columns.Contains("TicketID")) dgv.Columns["TicketID"].Visible = false;
+                if (dgv.Columns.Contains("BookingID")) dgv.Columns["BookingID"].Visible = false;
+                if (dgv.Columns.Contains("FlightID")) dgv.Columns["FlightID"].Visible = false;
+                if (dgv.Columns.Contains("PassengerID")) dgv.Columns["PassengerID"].Visible = false;
+
+                cmbBooking.DataSource = dbHelper.ExecuteQuery("SELECT BookingID, CAST(BookingID AS varchar) + ' - ' + CAST(Booking_date AS varchar) AS Info FROM Booking");
+                cmbBooking.DisplayMember = "Info"; cmbBooking.ValueMember = "BookingID";
+
+                cmbFlight.DataSource = dbHelper.ExecuteQuery("SELECT FlightID, Flight_Number FROM Flight");
+                cmbFlight.DisplayMember = "Flight_Number"; cmbFlight.ValueMember = "FlightID";
+
+                cmbPassenger.DataSource = dbHelper.ExecuteQuery("SELECT PassengerID, first_name + ' ' + Last_name AS Name FROM Passenger");
+                cmbPassenger.DisplayMember = "Name"; cmbPassenger.ValueMember = "PassengerID";
             }
             catch (Exception ex) { MessageBox.Show("Load error: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
         }
@@ -84,9 +98,9 @@ namespace AirLine_Reservation_System.Forms
             if (e.RowIndex < 0) return;
             DataGridViewRow row = dgv.Rows[e.RowIndex];
             txtId.Text = row.Cells["TicketID"]?.Value?.ToString();
-            txtBookingId.Text = row.Cells["BookingID"]?.Value?.ToString();
-            txtFlightId.Text = row.Cells["FlightID"]?.Value?.ToString();
-            txtPassengerId.Text = row.Cells["PassengerID"]?.Value?.ToString();
+            cmbBooking.SelectedValue = row.Cells["BookingID"]?.Value;
+            cmbFlight.SelectedValue = row.Cells["FlightID"]?.Value;
+            cmbPassenger.SelectedValue = row.Cells["PassengerID"]?.Value;
             txtSeatNumber.Text = row.Cells["Seatnumber"]?.Value?.ToString();
             txtPrice.Text = row.Cells["Price"]?.Value?.ToString();
             cmbClass.Text = row.Cells["Class"]?.Value?.ToString();
@@ -97,7 +111,7 @@ namespace AirLine_Reservation_System.Forms
             try
             {
                 string q = $"INSERT INTO Ticket (Seatnumber, Class, Price, BookingID, FlightID, PassengerID) " +
-                           $"VALUES ('{txtSeatNumber.Text}','{cmbClass.Text}',{txtPrice.Text},{txtBookingId.Text},{txtFlightId.Text},{txtPassengerId.Text})";
+                           $"VALUES ('{txtSeatNumber.Text}','{cmbClass.Text}',{txtPrice.Text},{cmbBooking.SelectedValue},{cmbFlight.SelectedValue},{cmbPassenger.SelectedValue})";
                 dbHelper.ExecuteNonQuery(q); LoadData(); ClearFields();
                 MessageBox.Show("Ticket added.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
@@ -110,7 +124,7 @@ namespace AirLine_Reservation_System.Forms
             try
             {
                 string q = $"UPDATE Ticket SET Seatnumber='{txtSeatNumber.Text}', Class='{cmbClass.Text}', Price={txtPrice.Text}, " +
-                           $"BookingID={txtBookingId.Text}, FlightID={txtFlightId.Text}, PassengerID={txtPassengerId.Text} WHERE TicketID={txtId.Text}";
+                           $"BookingID={cmbBooking.SelectedValue}, FlightID={cmbFlight.SelectedValue}, PassengerID={cmbPassenger.SelectedValue} WHERE TicketID={txtId.Text}";
                 dbHelper.ExecuteNonQuery(q); LoadData(); ClearFields();
                 MessageBox.Show("Ticket updated.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
@@ -127,6 +141,6 @@ namespace AirLine_Reservation_System.Forms
             }
         }
 
-        private void ClearFields() { txtId.Clear(); txtBookingId.Clear(); txtFlightId.Clear(); txtPassengerId.Clear(); txtSeatNumber.Clear(); txtPrice.Clear(); cmbClass.SelectedIndex = 0; }
+        private void ClearFields() { txtId.Clear(); if(cmbBooking.Items.Count > 0) cmbBooking.SelectedIndex = 0; if(cmbFlight.Items.Count > 0) cmbFlight.SelectedIndex = 0; if(cmbPassenger.Items.Count > 0) cmbPassenger.SelectedIndex = 0; txtSeatNumber.Clear(); txtPrice.Clear(); cmbClass.SelectedIndex = 0; }
     }
 }

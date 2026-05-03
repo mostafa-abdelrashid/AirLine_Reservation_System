@@ -9,7 +9,8 @@ namespace AirLine_Reservation_System.Forms
     {
         private DBHelper dbHelper = new DBHelper();
         private DataGridView dgv;
-        private TextBox txtId, txtBookingId, txtAmount;
+        private TextBox txtId, txtAmount;
+        private ComboBox cmbBooking;
         private DateTimePicker dtpPaymentDate;
         private ComboBox cmbMethod;
 
@@ -32,8 +33,8 @@ namespace AirLine_Reservation_System.Forms
             this.Controls.Add(txtId);
 
             y += 38;
-            this.Controls.Add(FormTheme.MakeLabel("Booking ID:", lx, y));
-            txtBookingId = FormTheme.MakeTextBox(fx, y, 120); this.Controls.Add(txtBookingId);
+            this.Controls.Add(FormTheme.MakeLabel("Booking:", lx, y));
+            cmbBooking = FormTheme.MakeComboBox(fx, y, 160); this.Controls.Add(cmbBooking);
             this.Controls.Add(FormTheme.MakeLabel("Amount:", lx2, y));
             txtAmount = FormTheme.MakeTextBox(fx2, y, 120); this.Controls.Add(txtAmount);
 
@@ -68,6 +69,11 @@ namespace AirLine_Reservation_System.Forms
                     "SELECT p.PaymentID, p.BookingID, p.Amount, p.Payment_date, p.Payment_method, " +
                     "b.Status AS BookingStatus " +
                     "FROM Payment p JOIN Booking b ON p.BookingID = b.BookingID");
+                if (dgv.Columns.Contains("PaymentID")) dgv.Columns["PaymentID"].Visible = false;
+                if (dgv.Columns.Contains("BookingID")) dgv.Columns["BookingID"].Visible = false;
+
+                cmbBooking.DataSource = dbHelper.ExecuteQuery("SELECT BookingID, CAST(BookingID AS varchar) + ' - ' + CAST(Booking_date AS varchar) AS Info FROM Booking");
+                cmbBooking.DisplayMember = "Info"; cmbBooking.ValueMember = "BookingID";
             }
             catch (Exception ex) { MessageBox.Show("Load error: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
         }
@@ -77,7 +83,7 @@ namespace AirLine_Reservation_System.Forms
             if (e.RowIndex < 0) return;
             DataGridViewRow row = dgv.Rows[e.RowIndex];
             txtId.Text = row.Cells["PaymentID"]?.Value?.ToString();
-            txtBookingId.Text = row.Cells["BookingID"]?.Value?.ToString();
+            cmbBooking.SelectedValue = row.Cells["BookingID"]?.Value;
             txtAmount.Text = row.Cells["Amount"]?.Value?.ToString();
             cmbMethod.Text = row.Cells["Payment_method"]?.Value?.ToString();
             try { dtpPaymentDate.Value = Convert.ToDateTime(row.Cells["Payment_date"]?.Value); } catch { }
@@ -88,7 +94,7 @@ namespace AirLine_Reservation_System.Forms
             try
             {
                 string q = $"INSERT INTO Payment (BookingID, Amount, Payment_date, Payment_method) " +
-                           $"VALUES ({txtBookingId.Text},{txtAmount.Text},'{dtpPaymentDate.Value:yyyy-MM-dd}','{cmbMethod.Text}')";
+                           $"VALUES ({cmbBooking.SelectedValue},{txtAmount.Text},'{dtpPaymentDate.Value:yyyy-MM-dd}','{cmbMethod.Text}')";
                 dbHelper.ExecuteNonQuery(q); LoadData(); ClearFields();
                 MessageBox.Show("Payment recorded.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
@@ -100,7 +106,7 @@ namespace AirLine_Reservation_System.Forms
             if (string.IsNullOrEmpty(txtId.Text)) { MessageBox.Show("Select a row first."); return; }
             try
             {
-                string q = $"UPDATE Payment SET BookingID={txtBookingId.Text}, Amount={txtAmount.Text}, " +
+                string q = $"UPDATE Payment SET BookingID={cmbBooking.SelectedValue}, Amount={txtAmount.Text}, " +
                            $"Payment_date='{dtpPaymentDate.Value:yyyy-MM-dd}', Payment_method='{cmbMethod.Text}' WHERE PaymentID={txtId.Text}";
                 dbHelper.ExecuteNonQuery(q); LoadData(); ClearFields();
                 MessageBox.Show("Payment updated.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -118,6 +124,6 @@ namespace AirLine_Reservation_System.Forms
             }
         }
 
-        private void ClearFields() { txtId.Clear(); txtBookingId.Clear(); txtAmount.Clear(); cmbMethod.SelectedIndex = 0; dtpPaymentDate.Value = DateTime.Today; }
+        private void ClearFields() { txtId.Clear(); if(cmbBooking.Items.Count > 0) cmbBooking.SelectedIndex = 0; txtAmount.Clear(); cmbMethod.SelectedIndex = 0; dtpPaymentDate.Value = DateTime.Today; }
     }
 }

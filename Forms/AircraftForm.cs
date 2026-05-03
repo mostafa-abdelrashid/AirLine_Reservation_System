@@ -9,13 +9,13 @@ namespace AirLine_Reservation_System.Forms
     {
         private DBHelper dbHelper = new DBHelper();
         private DataGridView dgv;
-        private TextBox txtId, txtModel, txtCapacity, txtManufacturer, txtAirlineId;
+        private TextBox txtId, txtModel, txtCapacity, txtManufacturer;
+        private ComboBox cmbAirline;
 
         public AircraftForm()
         {
             FormTheme.Apply(this, "Manage Aircraft");
             this.Size = new Size(780, 520);
-
             this.Controls.Add(FormTheme.MakeHeaderPanel("🛩 Aircraft", "Manage the fleet of aircraft", this.Width));
 
             dgv = FormTheme.MakeGrid();
@@ -38,8 +38,9 @@ namespace AirLine_Reservation_System.Forms
             y += 38;
             this.Controls.Add(FormTheme.MakeLabel("Capacity:", lx, y));
             txtCapacity = FormTheme.MakeTextBox(fx, y, 90); this.Controls.Add(txtCapacity);
-            this.Controls.Add(FormTheme.MakeLabel("Airline ID:", lx2, y));
-            txtAirlineId = FormTheme.MakeTextBox(fx2, y, 90); this.Controls.Add(txtAirlineId);
+            this.Controls.Add(FormTheme.MakeLabel("Airline:", lx2, y));
+            cmbAirline = FormTheme.MakeComboBox(fx2, y, 160);
+            this.Controls.Add(cmbAirline);
 
             y += 50;
             var btnAdd = FormTheme.MakeButton("➕ Add", lx, y, FormTheme.BtnAdd);
@@ -57,7 +58,17 @@ namespace AirLine_Reservation_System.Forms
 
         private void LoadData()
         {
-            try { dgv.DataSource = dbHelper.ExecuteQuery("SELECT a.*, al.Name AS AirlineName FROM Aircraft a JOIN Airline al ON a.AirlineID = al.AirlineID"); }
+            try
+            {
+                dgv.DataSource = dbHelper.ExecuteQuery("SELECT a.*, al.Name AS AirlineName FROM Aircraft a JOIN Airline al ON a.AirlineID = al.AirlineID");
+                if (dgv.Columns.Contains("AircraftID")) dgv.Columns["AircraftID"].Visible = false;
+                if (dgv.Columns.Contains("AirlineID")) dgv.Columns["AirlineID"].Visible = false;
+
+                DataTable dtAirlines = dbHelper.ExecuteQuery("SELECT AirlineID, Name FROM Airline");
+                cmbAirline.DataSource = dtAirlines;
+                cmbAirline.DisplayMember = "Name";
+                cmbAirline.ValueMember = "AirlineID";
+            }
             catch (Exception ex) { MessageBox.Show("Load error: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
         }
 
@@ -69,14 +80,14 @@ namespace AirLine_Reservation_System.Forms
             txtModel.Text = row.Cells["Model"]?.Value?.ToString();
             txtManufacturer.Text = row.Cells["Manufacturer"]?.Value?.ToString();
             txtCapacity.Text = row.Cells["Capacity"]?.Value?.ToString();
-            txtAirlineId.Text = row.Cells["AirlineID"]?.Value?.ToString();
+            cmbAirline.SelectedValue = row.Cells["AirlineID"]?.Value;
         }
 
         private void BtnAdd_Click(object sender, EventArgs e)
         {
             try
             {
-                string q = $"INSERT INTO Aircraft (Model, Capacity, Manufacturer, AirlineID) VALUES ('{txtModel.Text}',{txtCapacity.Text},'{txtManufacturer.Text}',{txtAirlineId.Text})";
+                string q = $"INSERT INTO Aircraft (Model, Capacity, Manufacturer, AirlineID) VALUES ('{txtModel.Text}',{txtCapacity.Text},'{txtManufacturer.Text}',{cmbAirline.SelectedValue})";
                 dbHelper.ExecuteNonQuery(q); LoadData(); ClearFields();
                 MessageBox.Show("Aircraft added.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
@@ -88,7 +99,7 @@ namespace AirLine_Reservation_System.Forms
             if (string.IsNullOrEmpty(txtId.Text)) { MessageBox.Show("Select a row first."); return; }
             try
             {
-                string q = $"UPDATE Aircraft SET Model='{txtModel.Text}', Capacity={txtCapacity.Text}, Manufacturer='{txtManufacturer.Text}', AirlineID={txtAirlineId.Text} WHERE AircraftID={txtId.Text}";
+                string q = $"UPDATE Aircraft SET Model='{txtModel.Text}', Capacity={txtCapacity.Text}, Manufacturer='{txtManufacturer.Text}', AirlineID={cmbAirline.SelectedValue} WHERE AircraftID={txtId.Text}";
                 dbHelper.ExecuteNonQuery(q); LoadData(); ClearFields();
                 MessageBox.Show("Aircraft updated.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
@@ -105,6 +116,6 @@ namespace AirLine_Reservation_System.Forms
             }
         }
 
-        private void ClearFields() { txtId.Clear(); txtModel.Clear(); txtCapacity.Clear(); txtManufacturer.Clear(); txtAirlineId.Clear(); }
+        private void ClearFields() { txtId.Clear(); txtModel.Clear(); txtCapacity.Clear(); txtManufacturer.Clear(); if (cmbAirline.Items.Count > 0) cmbAirline.SelectedIndex = 0; }
     }
 }

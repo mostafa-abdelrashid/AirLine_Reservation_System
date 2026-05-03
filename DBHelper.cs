@@ -15,20 +15,43 @@ namespace AirLine_Reservation_System
 
         public void OpenConnection()
         {
-            connection.Open();
+            if (connection.State == ConnectionState.Closed)
+                connection.Open();
         }
         public void CloseConnection()
         {
-            connection.Close();
+            if (connection.State == ConnectionState.Open)
+                connection.Close();
         }
         public DataTable ExecuteQuery(string query)
         {
             DataTable dt = new DataTable();
-            using (SqlCommand cmd = new SqlCommand(query, connection))
+            try
             {
                 OpenConnection();
-                SqlDataAdapter da = new SqlDataAdapter(cmd);
-                da.Fill(dt);
+                using (SqlCommand cmd = new SqlCommand(query, connection))
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    if (reader.HasRows)
+                    {
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            dt.Columns.Add(reader.GetName(i));
+                        }
+                        while (reader.Read())
+                        {
+                            DataRow row = dt.NewRow();
+                            for (int i = 0; i < reader.FieldCount; i++)
+                            {
+                                row[i] = reader[i];
+                            }
+                            dt.Rows.Add(row);
+                        }
+                    }
+                }
+            }
+            finally
+            {
                 CloseConnection();
             }
             return dt;
@@ -36,10 +59,16 @@ namespace AirLine_Reservation_System
         public int ExecuteNonQuery(string query)
         {
             int result = 0;
-            using (SqlCommand cmd = new SqlCommand(query, connection))
+            try
             {
                 OpenConnection();
-                result = cmd.ExecuteNonQuery();
+                using (SqlCommand cmd = new SqlCommand(query, connection))
+                {
+                    result = cmd.ExecuteNonQuery();
+                }
+            }
+            finally
+            {
                 CloseConnection();
             }
             return result;

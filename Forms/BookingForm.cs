@@ -9,7 +9,8 @@ namespace AirLine_Reservation_System.Forms
     {
         private DBHelper dbHelper = new DBHelper();
         private DataGridView dgv;
-        private TextBox txtId, txtPassengerId, txtTotalAmount;
+        private TextBox txtId, txtTotalAmount;
+        private ComboBox cmbPassenger;
         private DateTimePicker dtpBookingDate;
         private ComboBox cmbStatus;
 
@@ -32,8 +33,9 @@ namespace AirLine_Reservation_System.Forms
             this.Controls.Add(txtId);
 
             y += 38;
-            this.Controls.Add(FormTheme.MakeLabel("Passenger ID:", lx, y));
-            txtPassengerId = FormTheme.MakeTextBox(fx, y, 120); this.Controls.Add(txtPassengerId);
+            this.Controls.Add(FormTheme.MakeLabel("Passenger:", lx, y));
+            cmbPassenger = FormTheme.MakeComboBox(fx, y, 160);
+            this.Controls.Add(cmbPassenger);
             this.Controls.Add(FormTheme.MakeLabel("Booking Date:", lx2, y));
             dtpBookingDate = FormTheme.MakeDatePicker(fx2, y, 180); this.Controls.Add(dtpBookingDate);
 
@@ -65,9 +67,16 @@ namespace AirLine_Reservation_System.Forms
             try
             {
                 dgv.DataSource = dbHelper.ExecuteQuery(
-                    "SELECT b.BookingID, b.Booking_date, b.Status, b.Totalamount, " +
+                    "SELECT b.BookingID, b.Booking_date, b.Status, b.Totalamount, b.PassengerID, " +
                     "p.first_name + ' ' + p.Last_name AS PassengerName " +
                     "FROM Booking b JOIN Passenger p ON b.PassengerID = p.PassengerID");
+                if (dgv.Columns.Contains("BookingID")) dgv.Columns["BookingID"].Visible = false;
+                if (dgv.Columns.Contains("PassengerID")) dgv.Columns["PassengerID"].Visible = false;
+
+                DataTable dtPassengers = dbHelper.ExecuteQuery("SELECT PassengerID, first_name + ' ' + Last_name AS Name FROM Passenger");
+                cmbPassenger.DataSource = dtPassengers;
+                cmbPassenger.DisplayMember = "Name";
+                cmbPassenger.ValueMember = "PassengerID";
             }
             catch (Exception ex) { MessageBox.Show("Load error: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
         }
@@ -79,6 +88,7 @@ namespace AirLine_Reservation_System.Forms
             txtId.Text = row.Cells["BookingID"]?.Value?.ToString();
             txtTotalAmount.Text = row.Cells["Totalamount"]?.Value?.ToString();
             cmbStatus.Text = row.Cells["Status"]?.Value?.ToString();
+            cmbPassenger.SelectedValue = row.Cells["PassengerID"]?.Value;
             try { dtpBookingDate.Value = Convert.ToDateTime(row.Cells["Booking_date"]?.Value); } catch { }
         }
 
@@ -87,7 +97,7 @@ namespace AirLine_Reservation_System.Forms
             try
             {
                 string q = $"INSERT INTO Booking (Booking_date, Status, Totalamount, PassengerID) " +
-                           $"VALUES ('{dtpBookingDate.Value:yyyy-MM-dd}','{cmbStatus.Text}',{txtTotalAmount.Text},{txtPassengerId.Text})";
+                           $"VALUES ('{dtpBookingDate.Value:yyyy-MM-dd}','{cmbStatus.Text}',{txtTotalAmount.Text},{cmbPassenger.SelectedValue})";
                 dbHelper.ExecuteNonQuery(q); LoadData(); ClearFields();
                 MessageBox.Show("Booking added.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
@@ -99,7 +109,7 @@ namespace AirLine_Reservation_System.Forms
             if (string.IsNullOrEmpty(txtId.Text)) { MessageBox.Show("Select a row first."); return; }
             try
             {
-                string q = $"UPDATE Booking SET Booking_date='{dtpBookingDate.Value:yyyy-MM-dd}', Status='{cmbStatus.Text}', Totalamount={txtTotalAmount.Text}, PassengerID={txtPassengerId.Text} WHERE BookingID={txtId.Text}";
+                string q = $"UPDATE Booking SET Booking_date='{dtpBookingDate.Value:yyyy-MM-dd}', Status='{cmbStatus.Text}', Totalamount={txtTotalAmount.Text}, PassengerID={cmbPassenger.SelectedValue} WHERE BookingID={txtId.Text}";
                 dbHelper.ExecuteNonQuery(q); LoadData(); ClearFields();
                 MessageBox.Show("Booking updated.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
@@ -116,6 +126,6 @@ namespace AirLine_Reservation_System.Forms
             }
         }
 
-        private void ClearFields() { txtId.Clear(); txtPassengerId.Clear(); txtTotalAmount.Clear(); cmbStatus.SelectedIndex = 0; dtpBookingDate.Value = DateTime.Today; }
+        private void ClearFields() { txtId.Clear(); txtTotalAmount.Clear(); cmbStatus.SelectedIndex = 0; if(cmbPassenger.Items.Count > 0) cmbPassenger.SelectedIndex = 0; dtpBookingDate.Value = DateTime.Today; }
     }
 }

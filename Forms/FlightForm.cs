@@ -9,7 +9,8 @@ namespace AirLine_Reservation_System.Forms
     {
         private DBHelper dbHelper = new DBHelper();
         private DataGridView dgv;
-        private TextBox txtId, txtFlightNumber, txtAircraftId, txtAirlineId, txtDepAirportId, txtArrAirportId;
+        private TextBox txtId, txtFlightNumber;
+        private ComboBox cmbAircraft, cmbAirline, cmbDepAirport, cmbArrAirport;
         private DateTimePicker dtpDeparture, dtpArrival;
         private ComboBox cmbStatus;
 
@@ -47,16 +48,16 @@ namespace AirLine_Reservation_System.Forms
             dtpArrival = FormTheme.MakeDatePicker(fx2, y, 200); this.Controls.Add(dtpArrival);
 
             y += 38;
-            this.Controls.Add(FormTheme.MakeLabel("Aircraft ID:", lx, y));
-            txtAircraftId = FormTheme.MakeTextBox(fx, y, 90); this.Controls.Add(txtAircraftId);
-            this.Controls.Add(FormTheme.MakeLabel("Airline ID:", lx2, y));
-            txtAirlineId = FormTheme.MakeTextBox(fx2, y, 90); this.Controls.Add(txtAirlineId);
+            this.Controls.Add(FormTheme.MakeLabel("Aircraft:", lx, y));
+            cmbAircraft = FormTheme.MakeComboBox(fx, y, 160); this.Controls.Add(cmbAircraft);
+            this.Controls.Add(FormTheme.MakeLabel("Airline:", lx2, y));
+            cmbAirline = FormTheme.MakeComboBox(fx2, y, 160); this.Controls.Add(cmbAirline);
 
             y += 38;
-            this.Controls.Add(FormTheme.MakeLabel("Dep. Airport ID:", lx, y));
-            txtDepAirportId = FormTheme.MakeTextBox(fx, y, 90); this.Controls.Add(txtDepAirportId);
-            this.Controls.Add(FormTheme.MakeLabel("Arr. Airport ID:", lx2, y));
-            txtArrAirportId = FormTheme.MakeTextBox(fx2, y, 90); this.Controls.Add(txtArrAirportId);
+            this.Controls.Add(FormTheme.MakeLabel("Dep. Airport:", lx, y));
+            cmbDepAirport = FormTheme.MakeComboBox(fx, y, 160); this.Controls.Add(cmbDepAirport);
+            this.Controls.Add(FormTheme.MakeLabel("Arr. Airport:", lx2, y));
+            cmbArrAirport = FormTheme.MakeComboBox(fx2, y, 160); this.Controls.Add(cmbArrAirport);
 
             y += 48;
             var btnAdd = FormTheme.MakeButton("➕ Add", lx, y, FormTheme.BtnAdd);
@@ -77,13 +78,31 @@ namespace AirLine_Reservation_System.Forms
             try
             {
                 dgv.DataSource = dbHelper.ExecuteQuery(
-                    "SELECT f.FlightID, f.Flight_Number, f.Departure_Time, f.Arrival_Time, f.Status, " +
+                    "SELECT f.FlightID, f.Flight_Number, f.Departure_Time, f.Arrival_Time, f.Status, f.AircraftID, f.AirlineID, f.Departure_Airport_ID, f.Arrival_Airport_ID, " +
                     "dep.Code AS Departure, arr.Code AS Arrival, al.Name AS Airline, ac.Model AS Aircraft " +
                     "FROM Flight f " +
                     "JOIN Airport dep ON f.Departure_Airport_ID = dep.AirportID " +
                     "JOIN Airport arr ON f.Arrival_Airport_ID   = arr.AirportID " +
                     "JOIN Airline al  ON f.AirlineID  = al.AirlineID " +
                     "JOIN Aircraft ac ON f.AircraftID = ac.AircraftID");
+                if (dgv.Columns.Contains("FlightID")) dgv.Columns["FlightID"].Visible = false;
+                if (dgv.Columns.Contains("AircraftID")) dgv.Columns["AircraftID"].Visible = false;
+                if (dgv.Columns.Contains("AirlineID")) dgv.Columns["AirlineID"].Visible = false;
+                if (dgv.Columns.Contains("Departure_Airport_ID")) dgv.Columns["Departure_Airport_ID"].Visible = false;
+                if (dgv.Columns.Contains("Arrival_Airport_ID")) dgv.Columns["Arrival_Airport_ID"].Visible = false;
+
+                cmbAircraft.DataSource = dbHelper.ExecuteQuery("SELECT AircraftID, Model FROM Aircraft");
+                cmbAircraft.DisplayMember = "Model"; cmbAircraft.ValueMember = "AircraftID";
+
+                cmbAirline.DataSource = dbHelper.ExecuteQuery("SELECT AirlineID, Name FROM Airline");
+                cmbAirline.DisplayMember = "Name"; cmbAirline.ValueMember = "AirlineID";
+
+                DataTable dtAirports = dbHelper.ExecuteQuery("SELECT AirportID, Code + ' - ' + Name AS Info FROM Airport");
+                cmbDepAirport.DataSource = dtAirports.Copy();
+                cmbDepAirport.DisplayMember = "Info"; cmbDepAirport.ValueMember = "AirportID";
+                
+                cmbArrAirport.DataSource = dtAirports.Copy();
+                cmbArrAirport.DisplayMember = "Info"; cmbArrAirport.ValueMember = "AirportID";
             }
             catch (Exception ex) { MessageBox.Show("Load error: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
         }
@@ -95,6 +114,10 @@ namespace AirLine_Reservation_System.Forms
             txtId.Text = row.Cells["FlightID"]?.Value?.ToString();
             txtFlightNumber.Text = row.Cells["Flight_Number"]?.Value?.ToString();
             cmbStatus.Text = row.Cells["Status"]?.Value?.ToString();
+            cmbAircraft.SelectedValue = row.Cells["AircraftID"]?.Value;
+            cmbAirline.SelectedValue = row.Cells["AirlineID"]?.Value;
+            cmbDepAirport.SelectedValue = row.Cells["Departure_Airport_ID"]?.Value;
+            cmbArrAirport.SelectedValue = row.Cells["Arrival_Airport_ID"]?.Value;
             try { dtpDeparture.Value = Convert.ToDateTime(row.Cells["Departure_Time"]?.Value); dtpArrival.Value = Convert.ToDateTime(row.Cells["Arrival_Time"]?.Value); } catch { }
         }
 
@@ -104,7 +127,7 @@ namespace AirLine_Reservation_System.Forms
             {
                 string q = $"INSERT INTO Flight (Flight_Number, Departure_Time, Arrival_Time, Status, AircraftID, AirlineID, Departure_Airport_ID, Arrival_Airport_ID) " +
                            $"VALUES ('{txtFlightNumber.Text}','{dtpDeparture.Value:yyyy-MM-dd HH:mm}','{dtpArrival.Value:yyyy-MM-dd HH:mm}'," +
-                           $"'{cmbStatus.Text}',{txtAircraftId.Text},{txtAirlineId.Text},{txtDepAirportId.Text},{txtArrAirportId.Text})";
+                           $"'{cmbStatus.Text}',{cmbAircraft.SelectedValue},{cmbAirline.SelectedValue},{cmbDepAirport.SelectedValue},{cmbArrAirport.SelectedValue})";
                 dbHelper.ExecuteNonQuery(q); LoadData(); ClearFields();
                 MessageBox.Show("Flight added.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
@@ -117,8 +140,8 @@ namespace AirLine_Reservation_System.Forms
             try
             {
                 string q = $"UPDATE Flight SET Flight_Number='{txtFlightNumber.Text}', Departure_Time='{dtpDeparture.Value:yyyy-MM-dd HH:mm}', " +
-                           $"Arrival_Time='{dtpArrival.Value:yyyy-MM-dd HH:mm}', Status='{cmbStatus.Text}', AircraftID={txtAircraftId.Text}, " +
-                           $"AirlineID={txtAirlineId.Text}, Departure_Airport_ID={txtDepAirportId.Text}, Arrival_Airport_ID={txtArrAirportId.Text} " +
+                           $"Arrival_Time='{dtpArrival.Value:yyyy-MM-dd HH:mm}', Status='{cmbStatus.Text}', AircraftID={cmbAircraft.SelectedValue}, " +
+                           $"AirlineID={cmbAirline.SelectedValue}, Departure_Airport_ID={cmbDepAirport.SelectedValue}, Arrival_Airport_ID={cmbArrAirport.SelectedValue} " +
                            $"WHERE FlightID={txtId.Text}";
                 dbHelper.ExecuteNonQuery(q); LoadData(); ClearFields();
                 MessageBox.Show("Flight updated.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -138,8 +161,12 @@ namespace AirLine_Reservation_System.Forms
 
         private void ClearFields()
         {
-            txtId.Clear(); txtFlightNumber.Clear(); txtAircraftId.Clear(); txtAirlineId.Clear();
-            txtDepAirportId.Clear(); txtArrAirportId.Clear(); cmbStatus.SelectedIndex = 0;
+            txtId.Clear(); txtFlightNumber.Clear(); 
+            if(cmbAircraft.Items.Count > 0) cmbAircraft.SelectedIndex = 0;
+            if(cmbAirline.Items.Count > 0) cmbAirline.SelectedIndex = 0;
+            if(cmbDepAirport.Items.Count > 0) cmbDepAirport.SelectedIndex = 0;
+            if(cmbArrAirport.Items.Count > 0) cmbArrAirport.SelectedIndex = 0;
+            cmbStatus.SelectedIndex = 0;
             dtpDeparture.Value = DateTime.Now; dtpArrival.Value = DateTime.Now;
         }
     }

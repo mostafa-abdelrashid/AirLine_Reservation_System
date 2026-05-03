@@ -81,6 +81,7 @@ namespace AirLine_Reservation_System.Forms
                     "STRING_AGG(pp.Phone, ', ') AS Phones " +
                     "FROM Passenger p LEFT JOIN PassengerPhone pp ON p.PassengerID = pp.PassengerID " +
                     "GROUP BY p.PassengerID, p.first_name, p.Last_name, p.Passport_No, p.email, p.date_of_birth, p.Nationality");
+                if (dgv.Columns.Contains("PassengerID")) dgv.Columns["PassengerID"].Visible = false;
             }
             catch (Exception ex) { MessageBox.Show("Load error: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
         }

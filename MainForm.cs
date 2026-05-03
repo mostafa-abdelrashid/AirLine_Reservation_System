@@ -33,15 +33,16 @@ namespace AirLine_Reservation_System
             this.Size = new Size(1000, 650);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.BackColor = BgColor;
-            this.FormBorderStyle = FormBorderStyle.FixedSingle;
-            this.MaximizeBox = false;
+            this.FormBorderStyle = FormBorderStyle.Sizable;
+            this.MaximizeBox = true;
+            this.WindowState = FormWindowState.Maximized;
             this.Font = new Font("Segoe UI", 9.5f);
 
             // --- Side Panel ---
             sidePanel = new Panel()
             {
-                Size = new Size(220, 650),
-                Location = new Point(0, 0),
+                Width = 220,
+                Dock = DockStyle.Left,
                 BackColor = SideBarColor
             };
 
@@ -88,8 +89,7 @@ namespace AirLine_Reservation_System
             // --- Content Panel ---
             contentPanel = new Panel()
             {
-                Size = new Size(780, 650),
-                Location = new Point(220, 0),
+                Dock = DockStyle.Fill,
                 BackColor = BgColor
             };
 
@@ -103,13 +103,28 @@ namespace AirLine_Reservation_System
             };
             contentPanel.Controls.Add(lblTitle);
 
+            this.Controls.Add(contentPanel);
+            contentPanel.BringToFront();
+            
+            RefreshStats();
+        }
+
+        private void RefreshStats()
+        {
+            // Remove old stat cards
+            for (int i = contentPanel.Controls.Count - 1; i >= 0; i--)
+            {
+                if (contentPanel.Controls[i] is Panel)
+                {
+                    contentPanel.Controls.RemoveAt(i);
+                }
+            }
+
             // Stat cards
             AddStatCard("Total Passengers", "SELECT COUNT(*) FROM Passenger", 0);
             AddStatCard("Total Flights", "SELECT COUNT(*) FROM Flight", 1);
             AddStatCard("Total Bookings", "SELECT COUNT(*) FROM Booking", 2);
             AddStatCard("Total Tickets", "SELECT COUNT(*) FROM Ticket", 3);
-
-            this.Controls.Add(contentPanel);
         }
 
         private void AddStatCard(string title, string query, int index)
@@ -155,6 +170,7 @@ namespace AirLine_Reservation_System
         {
             f.StartPosition = FormStartPosition.CenterScreen;
             f.ShowDialog();
+            RefreshStats();
         }
     }
 }
