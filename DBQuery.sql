@@ -1,109 +1,101 @@
 
 CREATE TABLE Passenger (
-    PassengerID   INT IDENTITY(1,1) NOT NULL,
-    first_name    VARCHAR(50)  NOT NULL,
-    Last_name     VARCHAR(50)  NOT NULL,
-    Passport_No   VARCHAR(50)  NOT NULL,
-    email         VARCHAR(50)  NOT NULL,
-    date_of_birth DATETIME     NOT NULL,
-    Nationality   VARCHAR(50)  NOT NULL,
-    PRIMARY KEY (PassengerID)
+PassengerID   INT IDENTITY(1,1) PRIMARY KEY,
+first_name    VARCHAR(50)  NOT NULL,
+Last_name     VARCHAR(50)  NOT NULL,
+Passport_No   VARCHAR(50)  NOT NULL,
+email         VARCHAR(50)  NOT NULL,
+date_of_birth DATETIME     NOT NULL,
+Nationality   VARCHAR(50)  NOT NULL
 );
 
 CREATE TABLE PassengerPhone (
-    PassengerID INT NOT NULL,
-    Phone       VARCHAR(50) NOT NULL,
-    PRIMARY KEY (PassengerID, Phone),
-    FOREIGN KEY (PassengerID) REFERENCES Passenger(PassengerID) ON DELETE CASCADE
+PassengerID INT NOT NULL,
+Phone       VARCHAR(50) NOT NULL,
+PRIMARY KEY (PassengerID, Phone),
+FOREIGN KEY (PassengerID) REFERENCES Passenger(PassengerID) ON DELETE CASCADE
 );
 
 CREATE TABLE Booking (
-    BookingID    INT IDENTITY(1,1) NOT NULL,
-    Booking_date DATETIME    NOT NULL,
-    Status       VARCHAR(50) NOT NULL,
-    Totalamount  INT         NOT NULL,
-    PassengerID  INT         NOT NULL,
-    PRIMARY KEY (BookingID),
-    FOREIGN KEY (PassengerID) REFERENCES Passenger(PassengerID) ON DELETE CASCADE
+BookingID    INT IDENTITY(1,1) PRIMARY KEY,
+Booking_date DATETIME    NOT NULL,
+Status       VARCHAR(50) NOT NULL,
+Totalamount  INT         NOT NULL,
+PassengerID  INT         NOT NULL,
+FOREIGN KEY (PassengerID) REFERENCES Passenger(PassengerID) ON DELETE CASCADE
 );
 
 CREATE TABLE Payment (
-    PaymentID      INT IDENTITY(1,1) NOT NULL,
-    BookingID      INT         NOT NULL,
-    Amount         INT         NOT NULL,
-    Payment_date   DATETIME    NOT NULL,
-    Payment_method VARCHAR(50) NOT NULL,
-    PRIMARY KEY (PaymentID),
-    FOREIGN KEY (BookingID) REFERENCES Booking(BookingID) ON DELETE CASCADE
+PaymentID      INT IDENTITY(1,1) PRIMARY KEY,
+BookingID      INT         NOT NULL,
+Amount         INT         NOT NULL,
+Payment_date   DATETIME    NOT NULL,
+Payment_method VARCHAR(50) NOT NULL,
+FOREIGN KEY (BookingID) REFERENCES Booking(BookingID) ON DELETE CASCADE
 );
 
 CREATE TABLE Airline (
-    AirlineID INT IDENTITY(1,1) NOT NULL,
-    Name      NVARCHAR(255) NOT NULL,
-    City      NVARCHAR(100) NOT NULL,
-    Country   NVARCHAR(100) NOT NULL,
-    Code      NVARCHAR(10)  NOT NULL UNIQUE,
-    PRIMARY KEY (AirlineID)
+AirlineID INT IDENTITY(1,1) PRIMARY KEY,
+Name      NVARCHAR(255) NOT NULL,
+City      NVARCHAR(100) NOT NULL,
+Country   NVARCHAR(100) NOT NULL,
+Code      NVARCHAR(10)  NOT NULL UNIQUE
 );
 
 CREATE TABLE Aircraft (
-    AircraftID   INT IDENTITY(1,1) NOT NULL,
-    Model        NVARCHAR(100) NOT NULL,
-    Capacity     INT           NOT NULL,
-    Manufacturer NVARCHAR(100) NOT NULL,
-    AirlineID    INT           NOT NULL,
-    PRIMARY KEY (AircraftID),
-    FOREIGN KEY (AirlineID) REFERENCES Airline(AirlineID) ON DELETE CASCADE
+AircraftID   INT IDENTITY(1,1) PRIMARY KEY,
+Model        NVARCHAR(100) NOT NULL,
+Capacity     INT           NOT NULL,
+Manufacturer NVARCHAR(100) NOT NULL,
+AirlineID    INT           NOT NULL,
+FOREIGN KEY (AirlineID) REFERENCES Airline(AirlineID) ON DELETE CASCADE
 );
 
 CREATE TABLE Airport (
-    AirportID INT IDENTITY(1,1) NOT NULL,
-    Name      NVARCHAR(255) NOT NULL,
-    City      NVARCHAR(100) NOT NULL,
-    Country   NVARCHAR(100) NOT NULL,
-    Code      NVARCHAR(10)  NOT NULL UNIQUE,
-    PRIMARY KEY (AirportID)
+AirportID INT IDENTITY(1,1) PRIMARY KEY,
+Name      NVARCHAR(255) NOT NULL,
+City      NVARCHAR(100) NOT NULL,
+Country   NVARCHAR(100) NOT NULL,
+Code      NVARCHAR(10)  NOT NULL UNIQUE
 );
 
 CREATE TABLE Flight (
-    FlightID             INT IDENTITY(1,1) NOT NULL,
-    Flight_Number        VARCHAR(20) NOT NULL UNIQUE,
-    Departure_Time       DATETIME    NOT NULL,
-    Arrival_Time         DATETIME    NOT NULL,
-    Status               VARCHAR(50) NOT NULL DEFAULT 'Scheduled',
-    AircraftID           INT NOT NULL,
-    AirlineID            INT NOT NULL,
-    Departure_Airport_ID INT NOT NULL,
-    Arrival_Airport_ID   INT NOT NULL,
-    PRIMARY KEY (FlightID),
-    FOREIGN KEY (AircraftID) REFERENCES Aircraft(AircraftID) ON DELETE CASCADE,
-    FOREIGN KEY (AirlineID) REFERENCES Airline(AirlineID) ON DELETE CASCADE,
-    FOREIGN KEY (Departure_Airport_ID) REFERENCES Airport(AirportID) ON DELETE CASCADE,
-    FOREIGN KEY (Arrival_Airport_ID)   REFERENCES Airport(AirportID) ON DELETE CASCADE
+FlightID             INT IDENTITY(1,1) PRIMARY KEY,
+Flight_Number        VARCHAR(20) NOT NULL UNIQUE,
+Departure_Time       DATETIME    NOT NULL,
+Arrival_Time         DATETIME    NOT NULL,
+Status               VARCHAR(50) NOT NULL DEFAULT 'Scheduled',
+AircraftID           INT NOT NULL,
+AirlineID            INT NOT NULL,
+Departure_Airport_ID INT NOT NULL,
+Arrival_Airport_ID   INT NOT NULL,
+FOREIGN KEY (AircraftID) REFERENCES Aircraft(AircraftID) ON DELETE CASCADE,
+FOREIGN KEY (AirlineID) REFERENCES Airline(AirlineID) ON DELETE CASCADE,
+FOREIGN KEY (Departure_Airport_ID) REFERENCES Airport(AirportID) ON DELETE CASCADE,
+FOREIGN KEY (Arrival_Airport_ID)   REFERENCES Airport(AirportID) ON DELETE CASCADE
 );
 
 CREATE TABLE BookingFlight (
-    BookingID   INT NOT NULL,
-    FlightID    INT NOT NULL,
-    Travel_date DATETIME NOT NULL,
-    Seat_class  VARCHAR(50) NOT NULL,
-    PRIMARY KEY (BookingID, FlightID),
-    FOREIGN KEY (BookingID) REFERENCES Booking(BookingID) ON DELETE CASCADE,
-    FOREIGN KEY (FlightID)  REFERENCES Flight(FlightID) ON DELETE CASCADE
+BookingID   INT NOT NULL,
+FlightID    INT NOT NULL,
+Travel_date DATETIME NOT NULL,
+Seat_class  VARCHAR(50) NOT NULL,
+PRIMARY KEY (BookingID, FlightID),
+FOREIGN KEY (BookingID) REFERENCES Booking(BookingID) ON DELETE CASCADE,
+FOREIGN KEY (FlightID)  REFERENCES Flight(FlightID) ON DELETE CASCADE
 );
 
 CREATE TABLE Ticket (
-    TicketID    INT IDENTITY(1,1) NOT NULL,
-    Seatnumber  VARCHAR(50) NOT NULL,
-    Class       VARCHAR(50) NOT NULL,
-    Price       INT NOT NULL,
-    BookingID   INT NOT NULL,
-    FlightID    INT NOT NULL,
-    PassengerID INT NOT NULL,
-    PRIMARY KEY (TicketID),
-    FOREIGN KEY (BookingID)   REFERENCES Booking(BookingID) ON DELETE CASCADE,
-    FOREIGN KEY (FlightID)    REFERENCES Flight(FlightID) ON DELETE CASCADE,
-    FOREIGN KEY (PassengerID) REFERENCES Passenger(PassengerID) ON DELETE CASCADE
+TicketID    INT IDENTITY(1,1) PRIMARY KEY,
+Seatnumber  VARCHAR(50) NOT NULL,
+Class       VARCHAR(50) NOT NULL,
+Price       INT NOT NULL,
+BookingID   INT NOT NULL,
+FlightID    INT NOT NULL,
+PassengerID INT NOT NULL,
+FOREIGN KEY (BookingID)   REFERENCES Booking(BookingID) ON DELETE CASCADE,
+FOREIGN KEY (FlightID)    REFERENCES Flight(FlightID) ON DELETE CASCADE,
+FOREIGN KEY (PassengerID) REFERENCES Passenger(PassengerID) ON DELETE CASCADE
 );
 
 -- =====================
