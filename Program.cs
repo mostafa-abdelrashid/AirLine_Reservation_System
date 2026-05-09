@@ -12,8 +12,7 @@ namespace AirLine_Reservation_System
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
 
-            MainViewModel mainViewModel = new MainViewModel();
-            Application.Run(new MainForm(mainViewModel));
+            Application.Run(new MainForm());
         }
     }
 }

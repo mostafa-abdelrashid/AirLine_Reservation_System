@@ -9,7 +9,6 @@ namespace AirLine_Reservation_System
 {
     public class MainForm : Form
     {
-        private MainViewModel _viewModel;
         private Panel sidePanel;
         private Panel contentPanel;
         private Label lblTitle;
@@ -21,9 +20,8 @@ namespace AirLine_Reservation_System
         private readonly Color TextColor    = Color.FromArgb(226, 232, 240);
         private readonly Color BgColor      = Color.FromArgb(30, 41, 59);
 
-        public MainForm(MainViewModel viewModel)
+        public MainForm()
         {
-            _viewModel = viewModel;
             InitializeUI();
         }
 

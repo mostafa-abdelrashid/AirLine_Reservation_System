@@ -99,9 +99,7 @@ FOREIGN KEY (FlightID)    REFERENCES Flight(FlightID) ON DELETE CASCADE,
 FOREIGN KEY (PassengerID) REFERENCES Passenger(PassengerID)
 );
 
--- =====================
--- INSERT DATA
--- =====================
+
 
 -- Airlines
 INSERT INTO Airline (Name, City, Country, Code) VALUES

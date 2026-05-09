@@ -29,26 +29,25 @@ namespace AirLine_Reservation_System
             try
             {
                 OpenConnection();
-                using (SqlCommand cmd = new SqlCommand(query, connection))
-                using (SqlDataReader reader = cmd.ExecuteReader())
+                SqlCommand cmd = new SqlCommand(query, connection);
+                SqlDataReader reader = cmd.ExecuteReader();
+                if (reader.HasRows)
                 {
-                    if (reader.HasRows)
+                    for (int i = 0; i < reader.FieldCount; i++)
                     {
+                        dt.Columns.Add(reader.GetName(i));
+                    }
+                    while (reader.Read())
+                    {
+                        DataRow row = dt.NewRow();
                         for (int i = 0; i < reader.FieldCount; i++)
                         {
-                            dt.Columns.Add(reader.GetName(i));
+                            row[i] = reader[i];
                         }
-                        while (reader.Read())
-                        {
-                            DataRow row = dt.NewRow();
-                            for (int i = 0; i < reader.FieldCount; i++)
-                            {
-                                row[i] = reader[i];
-                            }
-                            dt.Rows.Add(row);
-                        }
+                        dt.Rows.Add(row);
                     }
                 }
+                reader.Close();
             }
             finally
             {
@@ -62,10 +61,8 @@ namespace AirLine_Reservation_System
             try
             {
                 OpenConnection();
-                using (SqlCommand cmd = new SqlCommand(query, connection))
-                {
-                    result = cmd.ExecuteNonQuery();
-                }
+                SqlCommand cmd = new SqlCommand(query, connection);
+                result = cmd.ExecuteNonQuery();
             }
             finally
             {
